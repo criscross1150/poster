@@ -4,7 +4,11 @@ import matplotlib.pyplot as plt
 from matplotlib.path import Path
 from matplotlib.patches import PathPatch,Rectangle,FancyArrowPatch
 SURF='#fcfcfb';INK='#0b0b0b';SEC='#52514e';MUT='#898781';GRID='#e1e0d9';BASE='#c3c2b7'
-RAMP=['#86b6ef','#5598e7','#2a78d6','#1c5cab','#0d366b']
+RAMP=['#c0392b','#eda100','#1baf7a','#2a78d6','#4a3aa7']
+# variantes oscuras para TEXTO: ambar y aqua no alcanzan 3:1 sobre fondo claro
+TXT=['#a5322a','#8a5d00','#00694a','#2a78d6','#4a3aa7']
+# texto sobre bloque relleno: claro sobre los oscuros, tinta sobre ambar y aqua
+ONFILL=['#ffffff','#0b0b0b','#0b0b0b','#ffffff','#ffffff']
 plt.rcParams.update({'font.family':'DejaVu Sans','font.size':11,'text.color':INK,'axes.facecolor':SURF,
  'figure.facecolor':SURF,'axes.edgecolor':BASE,'axes.labelcolor':SEC,'xtick.color':MUT,'ytick.color':MUT,
  'axes.linewidth':.8,'xtick.major.size':0,'ytick.major.size':0,'axes.spines.top':False,
@@ -50,11 +54,11 @@ for k in ORD:
     a,b=li[k]
     if b-a>0:
         ax.text(X0-0.016,(a+b)/2,f'{SH[k]}\n{RG[k]}',ha='right',va='center',fontsize=9.5,color=SEC,linespacing=1.3)
-        ax.text(X0+BW/2,(a+b)/2,str(M[k].sum()),ha='center',va='center',fontsize=10,weight='bold',color='#ffffff' if k>=2 else INK,zorder=7)
+        ax.text(X0+BW/2,(a+b)/2,str(M[k].sum()),ha='center',va='center',fontsize=10,weight='bold',color=ONFILL[k],zorder=7)
     a,b=ry[k]
     if b-a>0:
         ax.text(X1+0.016,(a+b)/2,f'{SH[k]}\n{RG[k]}',ha='left',va='center',fontsize=9.5,color=SEC,linespacing=1.3)
-        ax.text(X1-BW/2,(a+b)/2,str(M[:,k].sum()),ha='center',va='center',fontsize=10,weight='bold',color='#ffffff' if k>=2 else INK,zorder=7)
+        ax.text(X1-BW/2,(a+b)/2,str(M[:,k].sum()),ha='center',va='center',fontsize=10,weight='bold',color=ONFILL[k],zorder=7)
 ax.annotate('',xy=(-0.175,TOT),xytext=(-0.175,0),arrowprops=dict(arrowstyle='-|>',color=BASE,lw=1.4))
 ax.text(-0.196,TOT/2,'greater independence',rotation=90,va='center',ha='center',fontsize=9,color=MUT)
 ax.text(X0+BW/2,TOT+3.0,'ADMISSION',ha='center',fontsize=10.5,weight='bold',color=INK)
@@ -73,7 +77,7 @@ for k in range(5):
         a.plot([0,1],[r.bi_in,r.bi_eg],color=RAMP[k],lw=1.4,alpha=.42,solid_capstyle='round',zorder=3)
     if len(s):
         a.plot([0,1],[s.bi_in.mean(),s.bi_eg.mean()],color=RAMP[k],lw=4,zorder=5,solid_capstyle='round')
-        a.text(.5,-17,f'+{s.d.mean():.0f} pts',ha='center',fontsize=13,weight='bold',color=RAMP[k] if k>=2 else INK)
+        a.text(.5,-17,f'+{s.d.mean():.0f} pts',ha='center',fontsize=13,weight='bold',color=TXT[k])
     a.set_title(f'{SH[k]}  {RG[k]}\nn={len(s)}',fontsize=10.5,weight='bold',color=INK,pad=10,linespacing=1.35)
     a.set_xlim(-.22,1.22);a.set_ylim(-6,106);a.set_xticks([0,1]);a.set_xticklabels(['adm','disch'],fontsize=9,color=MUT)
     a.spines['bottom'].set_visible(False)
@@ -89,19 +93,22 @@ a=axs[0];a.set_axisbelow(True);a.yaxis.grid(True,color=GRID,lw=.7)
 xs=np.linspace(0,100,50)
 a.fill_between(xs,100-xs,112,color='#e34948',alpha=.055,zorder=1)
 a.plot(xs,100-xs,color='#e34948',lw=2,ls=(0,(5,3)),zorder=4)
-a.scatter(pb.bi_in,pb.d,s=46,color=RAMP[2],alpha=.68,edgecolor=SURF,lw=1.6,zorder=3)
-a.text(72,88,'mathematically\nimpossible',color='#c0332f',fontsize=9.5,ha='center',linespacing=1.3)
-a.text(46,60,'ceiling = 100 − admission BI',color='#c0332f',fontsize=9,ha='center',rotation=-30)
+for c in range(5):
+    sub=pb[pb.ci==c]
+    if len(sub): a.scatter(sub.bi_in,sub.d,s=52,color=RAMP[c],alpha=.80,edgecolor=SURF,lw=1.6,zorder=3,label=f'{SH[c]} {RG[c]}')
+leg=a.legend(loc='upper right',bbox_to_anchor=(1.0,0.99),frameon=False,fontsize=8.6,labelcolor=SEC,handletextpad=.5,borderpad=.2,labelspacing=.35)
+a.text(15,101,'mathematically impossible',color='#c0332f',fontsize=9.5,ha='left')
+a.text(40,52,'ceiling = 100 − admission BI',color='#c0332f',fontsize=9,ha='center',rotation=-30)
 a.set_xlabel('Admission Barthel Index');a.set_ylabel('ADL gain  ΔBI (points)')
 a.set_xlim(-4,104);a.set_ylim(-12,112)
 a.set_title('a. The ceiling caps every gain',fontsize=12,weight='bold',color=INK,loc='left',pad=12)
 b=axs[1];b.set_axisbelow(True);b.yaxis.grid(True,color=GRID,lw=.7)
 pct=[100*pb[pb.ci==c].d.sum()/(100-pb[pb.ci==c].bi_in).sum() for c in range(4)]
 ns=[len(pb[pb.ci==c]) for c in range(4)]
-b.bar(range(4),pct,width=.6,color=[RAMP[0],RAMP[3],RAMP[2],RAMP[2]],edgecolor=SURF,lw=2,zorder=3)
+b.bar(range(4),pct,width=.6,color=[RAMP[c] for c in range(4)],edgecolor=SURF,lw=2,zorder=3)
 for i,(v,n) in enumerate(zip(pct,ns)):
     b.text(i,v+2.4,f'{v:.0f}%',ha='center',fontsize=13,weight='bold',color=INK)
-    b.text(i,3.2,f'n={n}',ha='center',fontsize=9.5,color='#ffffff')
+    b.text(i,3.2,f'n={n}',ha='center',fontsize=9.5,color=ONFILL[i])
 b.axhline(50.2,color=SEC,lw=1.2,ls=(0,(4,3)),zorder=4)
 b.text(3.46,50.2,'cohort\n50.2%',fontsize=8.5,color=SEC,va='center',linespacing=1.3)
 b.set_xticks(range(4));b.set_xticklabels([f'{SH[c]}\n{RG[c]}' for c in range(4)],fontsize=9.5,color=SEC,linespacing=1.35)
@@ -122,8 +129,8 @@ top=4.30
 for k,(c,n,dbi,hr,rec) in enumerate(rows):
     y=top-k*1.02
     ax.add_patch(Rectangle((0,y-.34),1.20,.68,color=RAMP[c],zorder=3))
-    ax.text(CX['cat'],y+.11,SH[c],ha='center',va='center',fontsize=10.5,weight='bold',color='#ffffff' if c>=2 else INK)
-    ax.text(CX['cat'],y-.14,'BI '+RG[c],ha='center',va='center',fontsize=8.8,color='#ffffff' if c>=2 else SEC)
+    ax.text(CX['cat'],y+.11,SH[c],ha='center',va='center',fontsize=10.5,weight='bold',color=ONFILL[c])
+    ax.text(CX['cat'],y-.14,'BI '+RG[c],ha='center',va='center',fontsize=8.8,color=ONFILL[c])
     ax.text(CX['n'],y,str(n),ha='center',va='center',fontsize=11,color=SEC)
     ax.text(CX['d'],y,f'+{dbi:.0f}',ha='center',va='center',fontsize=14,weight='bold',color=INK)
     ax.add_patch(Rectangle((BARL,y-.14),BARW,.28,color=GRID,zorder=2))
