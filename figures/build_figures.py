@@ -39,10 +39,10 @@ T={
   'xlab':'Admission Barthel Index','ygain':'ADL gain  \u0394BI (points)',
   'yshare':'Share of available headroom recovered (%)','coh':'cohort',
   'v3f':'Headroom = 100 \u2212 admission BI. Normalising by it removes the ceiling artefact and answers the regression-to-the-mean objection: the\nadvantage of the severe group (BI 20\u201335) is not explained by simply having had more room to improve. Independent patients (BI 100, n=4) are\nexcluded from panel b \u2014 their headroom is zero, so the ratio is undefined.',
-  'v4t':'Admission Barthel category as an occupational therapy dosing rule',
-  'v4s':'Recovery peaks in the severe group in both absolute points and share of what was recoverable \u2014 that is where dose should concentrate.',
-  'h1':'Admission\ncategory','h2':'Patients','h3':'Mean\n\u0394BI','h4':'Headroom recovered','h5':'Indicated OT dose',
-  'dose':['Highest daily frequency,\nplus caregiver training','Highest daily frequency \u2014\nlargest achievable return','Standard daily frequency','Task-specific,\ndischarge-oriented']},
+  'v4t':'Recovery by admission Barthel category',
+  'v4s':'Recovery peaks in the severe group, in both absolute points and in share of what was recoverable.',
+  'h1':'Admission\ncategory','h2':'Patients','h3':'Mean\n\u0394BI','h4':'Headroom recovered','h5':'Proposed dose\nAUTHORS\u2019 INFERENCE,\nNOT A RESULT',
+  'dose':['\u2014','Priority for the highest\ndaily session frequency','\u2014','\u2014'],'v4f':'This cohort did not measure occupational therapy dose: every patient received what the unit provided, with no variation to compare. The single\nproposal above rests on the recovery pattern observed here together with external dose evidence, and is an inference by the authors, not a finding\nof this study. No differentiated recommendation is made for the other categories, and none is supported by these data.'},
  'es':{'sh':['Total','Severa','Moderada','Leve','Independiente'],
   'ibl':'IB','adm':'INGRESO','dis':'EGRESO','axis':'mayor independencia',
   'v1t':'Todas las cintas ascienden: ning\u00fan paciente perdi\u00f3 una categor\u00eda de Barthel',
@@ -55,10 +55,10 @@ T={
   'xlab':'\u00cdndice de Barthel al ingreso','ygain':'Ganancia en AVD  \u0394IB (puntos)',
   'yshare':'Margen disponible recuperado (%)','coh':'cohorte',
   'v3f':'Margen disponible = 100 \u2212 Barthel de ingreso. Normalizar por \u00e9l elimina el artefacto del techo y responde a la objeci\u00f3n de regresi\u00f3n a la media:\nla ventaja del grupo severo (IB 20\u201335) no se explica por haber tenido simplemente m\u00e1s espacio para mejorar. Los pacientes independientes al\ningreso (IB 100, n=4) quedan excluidos del panel b: su margen es cero y el cociente resulta indefinido.',
-  'v4t':'La categor\u00eda de Barthel al ingreso como regla de dosificaci\u00f3n de terapia ocupacional',
-  'v4s':'La recuperaci\u00f3n es m\u00e1xima en el grupo severo, tanto en puntos absolutos como en proporci\u00f3n de lo recuperable: ah\u00ed debe concentrarse la dosis.',
-  'h1':'Categor\u00eda\nal ingreso','h2':'Pacientes','h3':'\u0394IB\nmedio','h4':'Margen recuperado','h5':'Dosis de TO indicada',
-  'dose':['Frecuencia diaria m\u00e1xima,\nm\u00e1s formaci\u00f3n al cuidador','Frecuencia diaria m\u00e1xima:\nmayor retorno alcanzable','Frecuencia diaria est\u00e1ndar','Espec\u00edfica por tarea,\norientada al egreso']},
+  'v4t':'Recuperaci\u00f3n seg\u00fan la categor\u00eda de Barthel al ingreso',
+  'v4s':'La recuperaci\u00f3n es m\u00e1xima en el grupo severo, tanto en puntos absolutos como en proporci\u00f3n de lo recuperable.',
+  'h1':'Categor\u00eda\nal ingreso','h2':'Pacientes','h3':'\u0394IB\nmedio','h4':'Margen recuperado','h5':'Dosis propuesta\nINFERENCIA DE LOS AUTORES,\nNO UN RESULTADO',
+  'dose':['\u2014','Prioridad para la mayor\nfrecuencia diaria de sesiones','\u2014','\u2014'],'v4f':'Esta cohorte no midi\u00f3 la dosis de terapia ocupacional: todos los pacientes recibieron lo que la unidad entregaba, sin variaci\u00f3n que comparar.\nLa \u00fanica propuesta anterior se apoya en el patr\u00f3n de recuperaci\u00f3n observado aqu\u00ed junto con evidencia externa de dosis, y es una inferencia de los\nautores, no un hallazgo de este estudio. No se formula recomendaci\u00f3n diferenciada para las dem\u00e1s categor\u00edas, ni estos datos la respaldan.'},
 }[LANG]
 SH=T['sh']
 M=np.zeros((5,5),int)
@@ -178,13 +178,21 @@ for k,(c,n,dbi,hr,rec) in enumerate(rows):
     ax.add_patch(Rectangle((BARL,y-.14),BARW,.28,color=GRID,zorder=2))
     ax.add_patch(Rectangle((BARL,y-.14),BARW*hr/100,.28,color=RAMP[c],zorder=3))
     ax.text(CX['pct'],y,f'{hr}%',va='center',ha='center',fontsize=11,weight='bold',color=INK)
-    ax.add_patch(FancyArrowPatch((5.28,y),(5.56,y),arrowstyle='-|>',mutation_scale=12,color=BASE,lw=1.1))
-    ax.text(CX['dose'],y,rec,va='center',fontsize=9.5,color=SEC,linespacing=1.35)
-for x,t in ((CX['cat'],T['h1']),(CX['n'],T['h2']),(CX['d'],T['h3']),(BARL+BARW/2,T['h4']),(CX['dose']+.55,T['h5'])):
+    if rec=='\u2014':
+        ax.text(CX['dose']+.55,y,rec,va='center',ha='center',fontsize=13,color=BASE)
+    else:
+        ax.text(CX['dose'],y,rec,va='center',fontsize=9.8,color=INK,weight='bold',linespacing=1.35)
+for x,t in ((CX['cat'],T['h1']),(CX['n'],T['h2']),(CX['d'],T['h3']),(BARL+BARW/2,T['h4'])):
     ax.text(x,top+.80,t,ha='center',va='center',fontsize=9,weight='bold',color=MUT,linespacing=1.3)
-ax.plot([-.02,8.15],[top+.50,top+.50],color=BASE,lw=1)
-ax.text(-.02,top+1.72,T['v4t'],fontsize=15,weight='bold',color=INK)
-ax.text(-.02,top+1.30,T['v4s'],fontsize=9.8,color=SEC)
-ax.set_xlim(-.10,8.25);ax.set_ylim(.75,top+2.05)
+ax.text(CX['dose']+.55,top+1.12,T['h5'],ha='center',va='center',fontsize=8.4,weight='bold',
+        color=MUT,style='italic',linespacing=1.5)
+ax.plot([-.02,5.34],[top+.50,top+.50],color=BASE,lw=1)
+ax.plot([5.50,8.15],[top+.50,top+.50],color=BASE,lw=1,ls=(0,(3,2)))
+SEPX=5.42
+ax.plot([SEPX,SEPX],[top-3.62,top+1.02],color=BASE,lw=1,ls=(0,(3,2)))
+ax.text(-.02,top+2.56,T['v4t'],fontsize=15,weight='bold',color=INK)
+ax.text(-.02,top+2.00,T['v4s'],fontsize=9.8,color=SEC)
+ax.text(-.02,.34,T['v4f'],fontsize=8.2,color=MUT,va='top',linespacing=1.55)
+ax.set_xlim(-.10,8.25);ax.set_ylim(-.72,top+3.17)
 save(fig,'V4_esquema_dosificacion')
 print('done')
