@@ -5,7 +5,24 @@ from matplotlib.path import Path
 from matplotlib.patches import PathPatch,Rectangle,FancyArrowPatch
 SURF='#fcfcfb';INK='#0b0b0b';SEC='#52514e';MUT='#898781';GRID='#e1e0d9';BASE='#c3c2b7'
 CAT=['#c0392b','#eda100','#1baf7a','#2a78d6','#4a3aa7']
-SH=['Total','Severe','Moderate','Mild','Independent'];RG=['<20','20–35','40–55','60–99','100']
+RG=['<20','20–35','40–55','60–99','100']
+import sys
+STR={
+ 'en':{'sh':['Total','Severe','Moderate','Mild','Independent'],'ibl':'BI','in':'in','out':'out',
+   'axis':'greater independence',
+   'title':'Patients climb the Barthel staircase \u2014 none stepped down',
+   'sub':'78 paired patients \u00b7 median stay 5 days \u00b7 every arc runs to the right; a leftward arc would mean deterioration, and there is none',
+   'foot':'Arc thickness is proportional to the number of patients making that move. Loops on a step are patients who stayed in their category.',
+   'suffix':'','footy':-0.95,'y0':-1.35},
+ 'es':{'sh':['Total','Severa','Moderada','Leve','Independiente'],'ibl':'IB','in':'ingresan','out':'egresan',
+   'axis':'mayor independencia',
+   'title':'Los pacientes suben la escalera de Barthel \u2014 ninguno baj\u00f3 un escal\u00f3n',
+   'sub':'78 pacientes pareados \u00b7 estad\u00eda mediana 5 d\u00edas\nTodos los arcos van hacia la derecha; un arco hacia la izquierda significar\u00eda deterioro, y no hay ninguno',
+   'foot':'El grosor del arco es proporcional al n\u00famero de pacientes que hace ese movimiento.\nLos lazos sobre un escal\u00f3n son los pacientes que se mantuvieron en su categor\u00eda.',
+   'suffix':'_es','footy':-0.98,'y0':-1.95},
+}
+LANG=sys.argv[1] if len(sys.argv)>1 else 'en'
+T=STR[LANG]; SH=T['sh']
 plt.rcParams.update({'font.family':'DejaVu Sans','text.color':INK,'axes.facecolor':SURF,'figure.facecolor':SURF,'savefig.facecolor':SURF})
 p="/root/.claude/uploads/ebfc8eed-2f56-566b-bc1f-b90c8b916e98/8bf4679e-REGISTRO_ACTUALIZADO_ACV_20242025_POSTER.xlsx"
 df=pd.read_excel(p,sheet_name='Planilla Oficial')
@@ -22,10 +39,10 @@ for k in range(5):
     x0=k*SW; ytop=(k+1)*SH_
     tread.append((x0,x0+SW,ytop))
     ax.add_patch(Rectangle((x0,0),SW,ytop,facecolor=CAT[k],edgecolor=SURF,lw=2.5,zorder=3))
-    ax.text(x0+SW/2,ytop-0.30,f'{SH[k]}\nBI {RG[k]}',ha='center',va='top',fontsize=11.5,
+    ax.text(x0+SW/2,ytop-0.30,f"{SH[k]}\n{T['ibl']} {RG[k]}",ha='center',va='top',fontsize=11.5,
             color='#ffffff',weight='bold',linespacing=1.35,zorder=6)
-    ax.text(x0+SW/2,-0.20,f'{M[k].sum()} in',ha='center',va='top',fontsize=12,color=SEC,weight='bold')
-    ax.text(x0+SW/2,-0.52,f'{M[:,k].sum()} out',ha='center',va='top',fontsize=12,color=CAT[k],weight='bold')
+    ax.text(x0+SW/2,-0.20,f"{M[k].sum()} {T['in']}",ha='center',va='top',fontsize=12,color=SEC,weight='bold')
+    ax.text(x0+SW/2,-0.52,f"{M[:,k].sum()} {T['out']}",ha='center',va='top',fontsize=12,color=CAT[k],weight='bold')
 
 MAXW=26.0
 for i in range(5):
@@ -56,13 +73,12 @@ for i in range(5):
                         bbox=dict(boxstyle='round,pad=0.22',fc=SURF,ec='none',alpha=.92))
 
 ax.annotate('',xy=(5.16,5.05),xytext=(5.16,0.30),arrowprops=dict(arrowstyle='-|>',color=BASE,lw=1.6))
-ax.text(5.34,2.6,'greater independence',rotation=90,va='center',ha='center',fontsize=10.5,color=MUT)
-ax.text(2.5,6.62,'Patients climb the Barthel staircase — none stepped down',
+ax.text(5.34,2.6,T['axis'],rotation=90,va='center',ha='center',fontsize=10.5,color=MUT)
+ax.text(2.5,6.62,T['title'],
         ha='center',fontsize=16,weight='bold',color=INK)
-ax.text(2.5,6.18,'78 paired patients · median stay 5 days · every arc runs to the right; a leftward arc would mean deterioration, and there is none',
-        ha='center',fontsize=10.5,color=SEC)
-ax.text(0.02,-1.06,'Arc thickness is proportional to the number of patients making that move. Loops on a step are patients who stayed in their category.',
-        fontsize=10,color=MUT)
-ax.set_xlim(-0.30,5.62);ax.set_ylim(-1.25,6.95)
-for e in('png','pdf'):fig.savefig(f'figs2/V5_escalera.{e}',dpi=300,bbox_inches='tight')
+ax.text(2.5,6.10,T['sub'],
+        ha='center',va='top',fontsize=10.5,color=SEC,linespacing=1.45)
+ax.text(0.02,T['footy'],T['foot'],fontsize=10,color=MUT,va='top',linespacing=1.5)
+ax.set_xlim(-0.30,5.62);ax.set_ylim(T['y0'],6.95)
+for e in('png','pdf'):fig.savefig(f"figs2/V5_escalera{T['suffix']}.{e}",dpi=300,bbox_inches='tight')
 print('ok')
