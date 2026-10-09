@@ -8,13 +8,13 @@ CAT=['#c0392b','#eda100','#1baf7a','#2a78d6','#4a3aa7']
 RG=['<20','20–35','40–55','60–99','100']
 import sys
 STR={
- 'en':{'sh':['Total','Severe','Moderate','Mild','Independent'],'ibl':'BI','in':'in','out':'out',
+ 'en':{'sh':['Total','Severe','Moderate','Mild','Independent'],'ibl':'BI','rowin':'On admission','rowout':'At discharge',
    'axis':'greater independence',
    'title':'Patients climb the Barthel staircase \u2014 none stepped down',
    'sub':'78 paired patients \u00b7 median stay 5 days \u00b7 every arc runs to the right; a leftward arc would mean deterioration, and there is none',
    'foot':'Arc thickness is proportional to the number of patients making that move. Loops on a step are patients who stayed in their category.',
    'suffix':'','footy':-0.95,'y0':-1.35},
- 'es':{'sh':['Total','Severa','Moderada','Leve','Independiente'],'ibl':'IB','in':'ingresan','out':'egresan',
+ 'es':{'sh':['Total','Severa','Moderada','Leve','Independiente'],'ibl':'IB','rowin':'Al ingreso','rowout':'Al egreso',
    'axis':'mayor independencia',
    'title':'Los pacientes suben la escalera de Barthel \u2014 ninguno baj\u00f3 un escal\u00f3n',
    'sub':'78 pacientes pareados \u00b7 estad\u00eda mediana 5 d\u00edas\nTodos los arcos van hacia la derecha; un arco hacia la izquierda significar\u00eda deterioro, y no hay ninguno',
@@ -24,7 +24,8 @@ STR={
 LANG=sys.argv[1] if len(sys.argv)>1 else 'en'
 T=STR[LANG]; SH=T['sh']
 plt.rcParams.update({'font.family':'DejaVu Sans','text.color':INK,'axes.facecolor':SURF,'figure.facecolor':SURF,'savefig.facecolor':SURF})
-p="/root/.claude/uploads/ebfc8eed-2f56-566b-bc1f-b90c8b916e98/8bf4679e-REGISTRO_ACTUALIZADO_ACV_20242025_POSTER.xlsx"
+p=sys.argv[2] if len(sys.argv)>2 else None
+if not p: raise SystemExit('uso: build_staircase.py [en|es] <ruta al .xlsx>')
 df=pd.read_excel(p,sheet_name='Planilla Oficial')
 df.columns=['id','edad','sexo','dias','tipo','egreso','bi_in','bi_eg','mm_in','mm_eg']
 bc=lambda v:0 if v<20 else(1 if v<=35 else(2 if v<=55 else(3 if v<=99 else 4)))
@@ -32,17 +33,22 @@ pb=df.dropna(subset=['bi_in','bi_eg']).copy();pb['ci']=pb.bi_in.map(bc);pb['ce']
 M=np.zeros((5,5),int)
 for _,r in pb.iterrows():M[int(r.ci),int(r.ce)]+=1
 
-fig,ax=plt.subplots(figsize=(11.4,7.2));ax.axis('off')
+fig,ax=plt.subplots(figsize=(12.3,7.2));ax.axis('off')
 SW=1.0; SH_=1.0   # ancho y alto de cada escalón
 tread=[]          # (x0,x1,ytop) de cada huella
+R1,R2=-0.22,-0.62   # lineas base de las dos filas de conteos
+LX=-0.16            # borde derecho de los rotulos de fila
+ax.plot([LX-0.60,5.0],[-0.10,-0.10],color=GRID,lw=1.2,zorder=2)
+ax.text(LX,R1,T['rowin'],ha='right',va='top',fontsize=11.5,color=MUT)
+ax.text(LX,R2,T['rowout'],ha='right',va='top',fontsize=11.5,color=MUT,weight='bold')
 for k in range(5):
     x0=k*SW; ytop=(k+1)*SH_
     tread.append((x0,x0+SW,ytop))
     ax.add_patch(Rectangle((x0,0),SW,ytop,facecolor=CAT[k],edgecolor=SURF,lw=2.5,zorder=3))
     ax.text(x0+SW/2,ytop-0.30,f"{SH[k]}\n{T['ibl']} {RG[k]}",ha='center',va='top',fontsize=11.5,
             color='#ffffff',weight='bold',linespacing=1.35,zorder=6)
-    ax.text(x0+SW/2,-0.20,f"{M[k].sum()} {T['in']}",ha='center',va='top',fontsize=12,color=SEC,weight='bold')
-    ax.text(x0+SW/2,-0.52,f"{M[:,k].sum()} {T['out']}",ha='center',va='top',fontsize=12,color=CAT[k],weight='bold')
+    ax.text(x0+SW/2,R1,str(M[k].sum()),ha='center',va='top',fontsize=14,color=SEC,weight='bold')
+    ax.text(x0+SW/2,R2,str(M[:,k].sum()),ha='center',va='top',fontsize=14,color=CAT[k],weight='bold')
 
 MAXW=26.0
 for i in range(5):
@@ -74,11 +80,13 @@ for i in range(5):
 
 ax.annotate('',xy=(5.16,5.05),xytext=(5.16,0.30),arrowprops=dict(arrowstyle='-|>',color=BASE,lw=1.6))
 ax.text(5.34,2.6,T['axis'],rotation=90,va='center',ha='center',fontsize=10.5,color=MUT)
-ax.text(2.5,6.62,T['title'],
+ax.text(2.42,6.62,T['title'],
         ha='center',fontsize=16,weight='bold',color=INK)
-ax.text(2.5,6.10,T['sub'],
+ax.text(2.42,6.10,T['sub'],
         ha='center',va='top',fontsize=10.5,color=SEC,linespacing=1.45)
-ax.text(0.02,T['footy'],T['foot'],fontsize=10,color=MUT,va='top',linespacing=1.5)
-ax.set_xlim(-0.30,5.62);ax.set_ylim(T['y0'],6.95)
-for e in('png','pdf'):fig.savefig(f"figs2/V5_escalera{T['suffix']}.{e}",dpi=300,bbox_inches='tight')
+ax.text(-0.76,T['footy'],T['foot'],fontsize=10,color=MUT,va='top',linespacing=1.5)
+ax.set_xlim(-0.78,5.62);ax.set_ylim(T['y0'],6.95)
+import os
+HERE=os.path.dirname(os.path.abspath(__file__))
+for e in('png','pdf'):fig.savefig(os.path.join(HERE,f"V5_escalera{T['suffix']}.{e}"),dpi=300,bbox_inches='tight')
 print('ok')
